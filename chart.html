@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>شارت TradingView - غرفة العمليات</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+  </style>
+</head>
+<body class="p-3 max-w-md mx-auto pb-12">
+
+  <!-- الرأس -->
+  <header class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
+    <div>
+      <h1 class="text-base font-bold text-cyan-400">منصة الشارت المتقدم</h1>
+      <p class="text-[11px] text-slate-400">الواجهة الثانية</p>
+    </div>
+    <div class="px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+      TradingView
+    </div>
+  </header>
+
+  <!-- أزرار التنقل -->
+  <nav class="grid grid-cols-2 gap-2 mb-4 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/60">
+    <a href="radar.html" class="py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:text-white text-center transition">
+      📡 رادار السوق
+    </a>
+    <a href="chart.html" class="py-2 text-xs font-bold rounded-lg bg-cyan-600 text-white text-center transition shadow">
+      📊 شارت TradingView
+    </a>
+  </nav>
+
+  <!-- محتوى الشارت -->
+  <div class="space-y-3">
+    <section class="glass rounded-xl overflow-hidden border border-slate-700/60 shadow-lg">
+      <div class="p-3.5 flex justify-between items-center bg-slate-900/60 border-b border-slate-800">
+        <h2 class="font-bold text-xs text-white">البيتكوين (BTC / USDT)</h2>
+        <div id="btc-tv-price" class="text-sm font-extrabold text-cyan-300">$----</div>
+      </div>
+      <div class="h-[480px] w-full bg-slate-950 p-1">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {
+            "width": "100%", "height": "100%", "symbol": "BINANCE:BTCUSDT",
+            "interval": "60", "timezone": "Etc/UTC", "theme": "dark", "locale": "ar", "allow_symbol_change": true
+          }
+          </script>
+        </div>
+      </div>
+    </section>
+
+    <div class="glass p-3 rounded-xl text-center text-xs text-slate-400">
+      يدعم أدوات الرسم الكاملة وتغيير الفريمات مباشرة.
+    </div>
+  </div>
+
+  <script>
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    async function fetchBtcPrice() {
+      try {
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+        const data = await res.json();
+        document.getElementById('btc-tv-price').innerText = `$${parseFloat(data.lastPrice).toLocaleString()}`;
+      } catch (e) {}
+    }
+    fetchBtcPrice();
+    setInterval(fetchBtcPrice, 30000);
+  </script>
+</body>
+</html>
