@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>غرفة عمليات الكريبتو - رادار السوق</title>
+  <title>غرفة عمليات الكريبتو</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,170 +15,253 @@
     .chevron.open { transform: rotate(180deg); }
   </style>
 </head>
-<body class="p-3 max-w-md mx-auto pb-10">
+<body class="p-3 max-w-md mx-auto pb-12">
 
-  <!-- رأس الصفحة / الهوية -->
-  <header class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+  <!-- ================= راس الصفحة والهوية ================= -->
+  <header class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
     <div>
-      <h1 class="text-lg font-bold text-cyan-400">رادار السوق اللحظي</h1>
-      <p class="text-xs text-slate-400">غرفة العمليات الخاصة</p>
+      <h1 class="text-base font-bold text-cyan-400">غرفة عمليات الساعي</h1>
+      <p class="text-[11px] text-slate-400">التحليلات والرسوم البيانية المباشرة</p>
     </div>
     <div id="status-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-      متصل بالسوق
+      متصل
     </div>
   </header>
 
-  <!-- القسم العام: السيولة والاستحواذ والخوف والطمع -->
-  <section class="grid grid-cols-2 gap-3 mb-4">
-    <!-- TOTAL -->
-    <div class="glass p-3 rounded-xl">
-      <span class="text-xs text-slate-400 block">إجمالي السيولة (TOTAL)</span>
-      <div id="total-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
-      <div class="flex justify-between items-center mt-1 text-[11px]">
-        <span id="total-prev" class="text-slate-400">الأمس: --</span>
-        <span id="total-diff" class="font-semibold text-emerald-400">--%</span>
+  <!-- ================= شريط التنقل بين الواجهات (Tabs) ================= -->
+  <nav class="grid grid-cols-2 gap-2 mb-4 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/60">
+    <button onclick="switchTab('radar')" id="tab-btn-radar" class="py-2 text-xs font-bold rounded-lg bg-cyan-600 text-white transition shadow">
+      📡 رادار السوق
+    </button>
+    <button onclick="switchTab('chart')" id="tab-btn-chart" class="py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white transition">
+      📊 شارت TradingView
+    </button>
+  </nav>
+
+
+  <!-- ================================================= -->
+  <!-- الواجهة الأولى: رادار السوق والمؤشرات الفنية -->
+  <!-- ================================================= -->
+  <div id="tab-radar" class="space-y-3">
+    
+    <!-- قسم السيولة والاستحواذ -->
+    <section class="grid grid-cols-2 gap-3">
+      <div class="glass p-3 rounded-xl">
+        <span class="text-xs text-slate-400 block">إجمالي السيولة (TOTAL)</span>
+        <div id="total-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
+        <div class="flex justify-between items-center mt-1 text-[11px]">
+          <span id="total-prev" class="text-slate-400">الأمس: --</span>
+          <span id="total-diff" class="font-semibold text-emerald-400">--%</span>
+        </div>
       </div>
-    </div>
 
-    <!-- USDT.D -->
-    <div class="glass p-3 rounded-xl">
-      <span class="text-xs text-slate-400 block">استحواذ التيثر (USDT.D)</span>
-      <div id="usdt-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
-      <div class="flex justify-between items-center mt-1 text-[11px]">
-        <span id="usdt-prev" class="text-slate-400">الأمس: --</span>
-        <span id="usdt-diff" class="font-semibold text-red-400">--%</span>
+      <div class="glass p-3 rounded-xl">
+        <span class="text-xs text-slate-400 block">استحواذ التيثر (USDT.D)</span>
+        <div id="usdt-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
+        <div class="flex justify-between items-center mt-1 text-[11px]">
+          <span id="usdt-prev" class="text-slate-400">سيولة مستقرة</span>
+          <span id="usdt-diff" class="font-semibold text-emerald-400">--</span>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- مؤشر الخوف والطمع -->
-  <section class="glass p-3 rounded-xl mb-4 flex items-center justify-between">
-    <div>
-      <span class="text-xs text-slate-400 block">مؤشر الخوف والطمع (Fear & Greed)</span>
-      <div id="fear-greed-val" class="text-base font-bold text-amber-400 mt-0.5">--</div>
-    </div>
-    <div id="fear-greed-label" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300">
-      جاري الجلب
-    </div>
-  </section>
-
-  <!-- قسم البيتكوين والفريمات -->
-  <section class="glass p-4 rounded-xl mb-4">
-    <div class="flex justify-between items-center mb-3">
+    <!-- مؤشر الخوف والطمع -->
+    <section class="glass p-3 rounded-xl flex items-center justify-between">
       <div>
-        <h2 class="font-bold text-sm text-cyan-300">ملك السوق (BTC / USDT)</h2>
-        <div id="btc-price" class="text-xl font-extrabold text-white mt-0.5">$----</div>
+        <span class="text-xs text-slate-400 block">مؤشر الخوف والطمع (Fear & Greed)</span>
+        <div id="fear-greed-val" class="text-base font-bold text-amber-400 mt-0.5">--</div>
       </div>
-      <div class="text-left">
-        <span id="btc-change" class="text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">--%</span>
-        <span id="btc-prev" class="text-[11px] text-slate-400 block mt-1">إغلاق الشمعة السابقة: $----</span>
+      <div id="fear-greed-label" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300">
+        جاري الجلب
       </div>
-    </div>
+    </section>
 
-    <!-- أزرار اختيار الفريم -->
-    <div class="grid grid-cols-3 gap-2 mb-3 bg-slate-900/60 p-1 rounded-lg border border-slate-700/50">
-      <button onclick="changeInterval('1h')" id="btn-1h" class="py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition">فريم 1س</button>
-      <button onclick="changeInterval('4h')" id="btn-4h" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم 4س</button>
-      <button onclick="changeInterval('1d')" id="btn-1d" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم يومي</button>
-    </div>
-
-    <!-- المؤشرات الفنية مع قوائم منسدلة للشارت الحقيقي -->
-    <div class="space-y-2.5 text-xs">
-
-      <!-- 1. المتوسطات EMA -->
-      <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
-        <button onclick="toggleChart('ema')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
-          <div class="flex items-center gap-2">
-            <svg id="icon-ema" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            <span class="text-slate-200 font-medium">المتوسطات (EMA 20 / 50 / 200)</span>
-          </div>
-          <span id="ema-status" class="font-bold text-slate-400">جاري الحساب...</span>
-        </button>
-        <div id="drawer-ema" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
-          <div class="flex justify-between text-[11px] text-slate-400 mb-2">
-            <span id="ema20-text">EMA20: --</span>
-            <span id="ema50-text">EMA50: --</span>
-            <span id="ema200-text">EMA200: --</span>
-          </div>
-          <div class="h-44 w-full">
-            <canvas id="chart-ema"></canvas>
-          </div>
+    <!-- قسم البيتكوين والمؤشرات -->
+    <section class="glass p-3.5 rounded-xl">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="font-bold text-sm text-cyan-300">ملك السوق (BTC / USDT)</h2>
+          <div id="btc-price" class="text-xl font-extrabold text-white mt-0.5">$----</div>
+        </div>
+        <div class="text-left">
+          <span id="btc-change" class="text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">--%</span>
+          <span id="btc-prev" class="text-[10px] text-slate-400 block mt-1">إغلاق سابق: $----</span>
         </div>
       </div>
 
-      <!-- 2. مؤشر MACD والهستوجرام -->
-      <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
-        <button onclick="toggleChart('macd')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
-          <div class="flex items-center gap-2">
-            <svg id="icon-macd" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            <div>
-              <span class="text-slate-200 font-medium block">مؤشر MACD والهستوجرام</span>
-              <div id="macd-hist-visual" class="flex gap-0.5 mt-1 items-end h-2.5"></div>
+      <!-- أزرار اختيار الفريم -->
+      <div class="grid grid-cols-3 gap-2 mb-3 bg-slate-900/60 p-1 rounded-lg border border-slate-700/50">
+        <button onclick="changeInterval('1h')" id="btn-1h" class="py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition">فريم 1س</button>
+        <button onclick="changeInterval('4h')" id="btn-4h" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم 4س</button>
+        <button onclick="changeInterval('1d')" id="btn-1d" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم يومي</button>
+      </div>
+
+      <!-- المؤشرات الفنية (قوائم منسدلة للشارتات الداخلية) -->
+      <div class="space-y-2 text-xs">
+
+        <!-- المتوسطات -->
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('ema')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2">
+              <svg id="icon-ema" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              <span class="text-slate-200 font-medium">المتوسطات (EMA 20/50/200)</span>
             </div>
+            <span id="ema-status" class="font-bold text-slate-400">جاري الحساب...</span>
+          </button>
+          <div id="drawer-ema" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
+            <div class="flex justify-between text-[11px] text-slate-400 mb-2">
+              <span id="ema20-text">EMA20: --</span>
+              <span id="ema50-text">EMA50: --</span>
+              <span id="ema200-text">EMA200: --</span>
+            </div>
+            <div class="h-40 w-full"><canvas id="chart-ema"></canvas></div>
           </div>
-          <span id="macd-val" class="font-bold text-slate-400">--</span>
-        </button>
-        <div id="drawer-macd" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
-          <div class="h-44 w-full">
-            <canvas id="chart-macd"></canvas>
+        </div>
+
+        <!-- MACD -->
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('macd')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2">
+              <svg id="icon-macd" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              <div>
+                <span class="text-slate-200 font-medium block">مؤشر MACD والهستوجرام</span>
+                <div id="macd-hist-visual" class="flex gap-0.5 mt-1 items-end h-2"></div>
+              </div>
+            </div>
+            <span id="macd-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-macd" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-macd"></canvas></div>
           </div>
+        </div>
+
+        <!-- Stochastic -->
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('stoch')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2">
+              <svg id="icon-stoch" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              <span class="text-slate-200 font-medium">مؤشر الاستوكاستيك (Stoch K/D)</span>
+            </div>
+            <span id="stoch-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-stoch" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-stoch"></canvas></div>
+          </div>
+        </div>
+
+        <!-- RSI -->
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('rsi')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-2">
+              <svg id="icon-rsi" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              <span class="text-slate-200 font-medium">مؤشر القوة النسبية (RSI 14)</span>
+            </div>
+            <span id="rsi-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-rsi" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-rsi"></canvas></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- صندوق القرار الذكي -->
+    <section class="glass p-3.5 rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-cyan-950/30">
+      <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1.5">النظرة الفنية وقرار الدخول</h3>
+      <div id="market-verdict" class="text-xs font-medium text-slate-200 leading-relaxed">
+        جاري تحليل المعطيات وحالة السوق العامة...
+      </div>
+    </section>
+
+  </div>
+
+
+  <!-- ================================================= -->
+  <!-- الواجهة الثانية: شارت TradingView المتقدم -->
+  <!-- ================================================= -->
+  <div id="tab-chart" class="hidden space-y-3">
+    
+    <section class="glass rounded-xl overflow-hidden border border-slate-700/60 shadow-lg">
+      <!-- رأس البطاقة -->
+      <div class="p-3.5 flex justify-between items-center bg-slate-900/60 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 text-amber-400 font-bold">
+            ₿
+          </div>
+          <div>
+            <h2 class="font-bold text-xs text-white">البيتكوين (BTC / USDT)</h2>
+            <div id="btc-tv-price" class="text-sm font-extrabold text-cyan-300 mt-0.5">$----</div>
+          </div>
+        </div>
+        <div class="px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 text-[10px] font-bold">
+          TradingView Pro
         </div>
       </div>
 
-      <!-- 3. مؤشر الاستوكاستيك Stochastic -->
-      <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
-        <button onclick="toggleChart('stoch')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
-          <div class="flex items-center gap-2">
-            <svg id="icon-stoch" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            <span class="text-slate-200 font-medium">مؤشر الاستوكاستيك (Stoch K/D)</span>
-          </div>
-          <span id="stoch-val" class="font-bold text-slate-400">--</span>
-        </button>
-        <div id="drawer-stoch" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
-          <div class="h-44 w-full">
-            <canvas id="chart-stoch"></canvas>
-          </div>
+      <!-- محتوى الشارت الاحترافي -->
+      <div class="h-[450px] w-full bg-slate-950 p-1">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {
+            "width": "100%",
+            "height": "100%",
+            "symbol": "BINANCE:BTCUSDT",
+            "interval": "60",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "ar",
+            "allow_symbol_change": true,
+            "calendar": false,
+            "support_host": "https://www.tradingview.com"
+          }
+          </script>
         </div>
       </div>
+    </section>
 
-      <!-- 4. مؤشر RSI -->
-      <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
-        <button onclick="toggleChart('rsi')" class="w-full flex justify-between items-center p-2.5 text-right hover:bg-slate-800/40 transition">
-          <div class="flex items-center gap-2">
-            <svg id="icon-rsi" class="w-4 h-4 text-slate-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            <span class="text-slate-200 font-medium">مؤشر القوة النسبية (RSI 14)</span>
-          </div>
-          <span id="rsi-val" class="font-bold text-slate-400">--</span>
-        </button>
-        <div id="drawer-rsi" class="hidden p-3 pt-1 border-t border-slate-800/80 bg-slate-950/50">
-          <div class="h-44 w-full">
-            <canvas id="chart-rsi"></canvas>
-          </div>
-        </div>
-      </div>
-
+    <div class="glass p-3 rounded-xl text-center text-xs text-slate-400">
+      الشارت يدعم أدوات الرسم الكاملة، تغيير الفريمات، والبحث عن العملات الأخرى مباشرة.
     </div>
-    <p class="text-[11px] text-slate-400 mt-2.5 text-center">اضغط على أي مؤشر لعرض الشارت اللحظي الخاص به</p>
-  </section>
 
-  <!-- قسم صندوق القرار الذكي -->
-  <section class="glass p-4 rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-cyan-950/30">
-    <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">النظرة الفنية وقرار الدخول</h3>
-    <div id="market-verdict" class="text-sm font-medium text-slate-200 leading-relaxed">
-      جاري تحليل المعطيات وحالة السوق العامة...
-    </div>
-  </section>
+  </div>
 
+
+  <!-- ================================================= -->
+  <!-- الكود البرمجية ومنطق التطبيق (JavaScript) -->
+  <!-- ================================================= -->
   <script>
     let currentInterval = '1h';
-    let charts = {}; // لتخزين كائنات الرسوم البيانية وتحديثها
+    let charts = {};
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
-    // فتح وإغلاق القوائم المنسدلة للشارتات
+    // نظام التنقل بين الواجهات (Tabs)
+    function switchTab(tabName) {
+      const radarDiv = document.getElementById('tab-radar');
+      const chartDiv = document.getElementById('tab-chart');
+      const btnRadar = document.getElementById('tab-btn-radar');
+      const btnChart = document.getElementById('tab-btn-chart');
+
+      if (tabName === 'radar') {
+        radarDiv.classList.remove('hidden');
+        chartDiv.classList.add('hidden');
+        btnRadar.className = "py-2 text-xs font-bold rounded-lg bg-cyan-600 text-white transition shadow";
+        btnChart.className = "py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white transition";
+      } else {
+        radarDiv.classList.add('hidden');
+        chartDiv.classList.remove('hidden');
+        btnChart.className = "py-2 text-xs font-bold rounded-lg bg-cyan-600 text-white transition shadow";
+        btnRadar.className = "py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white transition";
+      }
+    }
+
+    // فتح وإغلاق المؤشرات الداخلية
     function toggleChart(name) {
       const drawer = document.getElementById(`drawer-${name}`);
       const icon = document.getElementById(`icon-${name}`);
@@ -186,17 +269,15 @@
       icon.classList.toggle('open');
     }
 
+    // جلب وحساب بيانات الرادار
     async function fetchMarketData() {
       try {
-        // جلب 250 شمعة لضمان دقة حساب EMA 200
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${currentInterval}&limit=250`);
         const data = await res.json();
 
         const times = data.map(c => {
           const d = new Date(c[0]);
-          return currentInterval === '1d'
-            ? `${d.getMonth() + 1}/${d.getDate()}`
-            : `${d.getHours().toString().padStart(2, '0')}:00`;
+          return currentInterval === '1d' ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getHours().toString().padStart(2, '0')}:00`;
         });
         const highs = data.map(c => parseFloat(c[2]));
         const lows = data.map(c => parseFloat(c[3]));
@@ -207,7 +288,9 @@
         const priceChange = ((currentPrice - prevClose) / prevClose) * 100;
 
         document.getElementById('btc-price').innerText = `$${currentPrice.toLocaleString()}`;
-        document.getElementById('btc-prev').innerText = `إغلاق الشمعة السابقة: $${prevClose.toLocaleString()}`;
+        document.getElementById('btc-tv-price').innerText = `$${currentPrice.toLocaleString()}`;
+        document.getElementById('btc-prev').innerText = `إغلاق سابق: $${prevClose.toLocaleString()}`;
+        
         const changeEl = document.getElementById('btc-change');
         changeEl.innerText = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
         changeEl.className = `text-xs font-bold px-2 py-1 rounded ${priceChange >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`;
@@ -217,19 +300,15 @@
         fetchFearAndGreed();
 
       } catch (err) {
-        console.error("خطأ في جلب البيانات:", err);
-        document.getElementById('status-badge').innerText = "خطأ في الاتصال";
-        document.getElementById('status-badge').className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30";
+        console.error("خطأ في جلب بيانات بينانس", err);
       }
     }
 
-    // --- دوال الحسابات الفنية الحقيقية ---
+    // دوال الحسابات الرياضية للمؤشرات
     function calcEMA(data, period) {
       const k = 2 / (period + 1);
       let ema = [data[0]];
-      for (let i = 1; i < data.length; i++) {
-        ema.push(data[i] * k + ema[i - 1] * (1 - k));
-      }
+      for (let i = 1; i < data.length; i++) ema.push(data[i] * k + ema[i - 1] * (1 - k));
       return ema;
     }
 
@@ -245,20 +324,15 @@
     function calcRSI(closes, period = 14) {
       let rsiArray = new Array(closes.length).fill(50);
       let gains = 0, losses = 0;
-
       for (let i = 1; i <= period; i++) {
         let diff = closes[i] - closes[i - 1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
+        if (diff >= 0) gains += diff; else losses -= diff;
       }
-      let avgGain = gains / period;
-      let avgLoss = losses / period;
+      let avgGain = gains / period, avgLoss = losses / period;
       rsiArray[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
-
       for (let i = period + 1; i < closes.length; i++) {
         let diff = closes[i] - closes[i - 1];
-        let gain = diff >= 0 ? diff : 0;
-        let loss = diff < 0 ? -diff : 0;
+        let gain = diff >= 0 ? diff : 0, loss = diff < 0 ? -diff : 0;
         avgGain = (avgGain * (period - 1) + gain) / period;
         avgLoss = (avgLoss * (period - 1) + loss) / period;
         rsiArray[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
@@ -269,182 +343,104 @@
     function calcStochastic(highs, lows, closes, kPeriod = 14, dPeriod = 3) {
       let kLine = [];
       for (let i = 0; i < closes.length; i++) {
-        if (i < kPeriod - 1) {
-          kLine.push(50);
-          continue;
-        }
-        let sliceHigh = highs.slice(i - kPeriod + 1, i + 1);
-        let sliceLow = lows.slice(i - kPeriod + 1, i + 1);
-        let highest = Math.max(...sliceHigh);
-        let lowest = Math.min(...sliceLow);
+        if (i < kPeriod - 1) { kLine.push(50); continue; }
+        let highest = Math.max(...highs.slice(i - kPeriod + 1, i + 1));
+        let lowest = Math.min(...lows.slice(i - kPeriod + 1, i + 1));
         let k = highest === lowest ? 50 : ((closes[i] - lowest) / (highest - lowest)) * 100;
         kLine.push(k);
       }
-      // حساب SMA لخط D
       let dLine = kLine.map((_, i) => {
         if (i < dPeriod - 1) return kLine[i];
-        let sum = 0;
-        for (let j = 0; j < dPeriod; j++) sum += kLine[i - j];
+        let sum = 0; for (let j = 0; j < dPeriod; j++) sum += kLine[i - j];
         return sum / dPeriod;
       });
       return { kLine, dLine };
     }
 
     function calculateAndRenderIndicators(times, closes, highs, lows) {
-      const displayCount = 45; // عرض آخر 45 شمعة في الشارت لوضوح الرؤية
+      const displayCount = 40;
       const labels = times.slice(-displayCount);
 
-      // 1. EMA
-      const ema20 = calcEMA(closes, 20);
-      const ema50 = calcEMA(closes, 50);
-      const ema200 = calcEMA(closes, 200);
+      // EMA
+      const ema20 = calcEMA(closes, 20), ema50 = calcEMA(closes, 50), ema200 = calcEMA(closes, 200);
       const lastPrice = closes[closes.length - 1];
-      const lastEma20 = ema20[ema20.length - 1];
-      const lastEma50 = ema50[ema50.length - 1];
-      const lastEma200 = ema200[ema200.length - 1];
+      const lastE20 = ema20[ema20.length - 1], lastE50 = ema50[ema50.length - 1];
 
-      document.getElementById('ema20-text').innerText = `EMA20: $${Math.round(lastEma20).toLocaleString()}`;
-      document.getElementById('ema50-text').innerText = `EMA50: $${Math.round(lastEma50).toLocaleString()}`;
-      document.getElementById('ema200-text').innerText = `EMA200: $${Math.round(lastEma200).toLocaleString()}`;
-
+      document.getElementById('ema20-text').innerText = `EMA20: $${Math.round(lastE20).toLocaleString()}`;
+      document.getElementById('ema50-text').innerText = `EMA50: $${Math.round(lastE50).toLocaleString()}`;
+      document.getElementById('ema200-text').innerText = `EMA200: $${Math.round(ema200[ema200.length - 1]).toLocaleString()}`;
+      
       const emaStatusEl = document.getElementById('ema-status');
-      if (lastPrice > lastEma20 && lastPrice > lastEma50) {
-        emaStatusEl.innerText = "فوق المتوسطات (صاعد)";
-        emaStatusEl.className = "font-bold text-emerald-400";
-      } else if (lastPrice < lastEma20 && lastPrice < lastEma50) {
-        emaStatusEl.innerText = "تحت المتوسطات (هابط)";
-        emaStatusEl.className = "font-bold text-red-400";
+      if (lastPrice > lastE20 && lastPrice > lastE50) {
+        emaStatusEl.innerText = "فوق المتوسطات (إيجابي)"; emaStatusEl.className = "font-bold text-emerald-400";
       } else {
-        emaStatusEl.innerText = "تقاطع / تذبذب";
-        emaStatusEl.className = "font-bold text-amber-400";
+        emaStatusEl.innerText = "تحت الضغط (حذر)"; emaStatusEl.className = "font-bold text-amber-400";
       }
 
       renderChart('chart-ema', 'line', labels, [
-        { label: 'السعر', data: closes.slice(-displayCount), borderColor: '#f8fafc', borderWidth: 2, pointRadius: 0, tension: 0.1 },
-        { label: 'EMA 20', data: ema20.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
-        { label: 'EMA 50', data: ema50.slice(-displayCount), borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0 },
-        { label: 'EMA 200', data: ema200.slice(-displayCount), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0 }
+        { label: 'السعر', data: closes.slice(-displayCount), borderColor: '#f8fafc', borderWidth: 2, pointRadius: 0 },
+        { label: 'EMA20', data: ema20.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
+        { label: 'EMA50', data: ema50.slice(-displayCount), borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0 }
       ]);
 
-      // 2. MACD
+      // MACD
       const { macdLine, signalLine, histogram } = calcMACD(closes);
-      const lastMacd = macdLine[macdLine.length - 1];
       const lastHist = histogram[histogram.length - 1];
       const macdEl = document.getElementById('macd-val');
-      macdEl.innerText = `${lastMacd.toFixed(1)} (${lastHist >= 0 ? 'زخم شرائي' : 'زخم بيعي'})`;
+      macdEl.innerText = `${lastHist >= 0 ? 'زخم شرائي' : 'زخم بيعي'}`;
       macdEl.className = `font-bold ${lastHist >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
 
-      // تحديث الأعمدة المصغرة الحقيقية في البطاقة
+      // هيستوجرام مصغر
       const histContainer = document.getElementById('macd-hist-visual');
       histContainer.innerHTML = '';
-      const recentHist = histogram.slice(-10);
-      const maxAbsHist = Math.max(...recentHist.map(Math.abs)) || 1;
-      recentHist.forEach(val => {
+      histogram.slice(-10).forEach(v => {
         const bar = document.createElement('div');
-        const heightPct = Math.max(25, Math.round((Math.abs(val) / maxAbsHist) * 100));
-        bar.style.height = `${heightPct}%`;
-        bar.className = `w-1.5 rounded-sm ${val >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`;
+        bar.className = `w-1 rounded-sm ${v >= 0 ? 'bg-emerald-500 h-2.5' : 'bg-red-500 h-2'}`;
         histContainer.appendChild(bar);
       });
 
-      const histSlice = histogram.slice(-displayCount);
-      renderChart('chart-macd', 'bar', labels, [
-        {
-          type: 'line',
-          label: 'MACD',
-          data: macdLine.slice(-displayCount),
-          borderColor: '#38bdf8',
-          borderWidth: 1.5,
-          pointRadius: 0
-        },
-        {
-          type: 'line',
-          label: 'Signal',
-          data: signalLine.slice(-displayCount),
-          borderColor: '#f97316',
-          borderWidth: 1.5,
-          pointRadius: 0
-        },
-        {
-          type: 'bar',
-          label: 'Histogram',
-          data: histSlice,
-          backgroundColor: histSlice.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
-          borderRadius: 2
-        }
+      renderChart('chart-macd', 'line', labels, [
+        { label: 'MACD', data: macdLine.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
+        { label: 'Signal', data: signalLine.slice(-displayCount), borderColor: '#f97316', borderWidth: 1.5, pointRadius: 0 }
       ]);
 
-      // 3. Stochastic
+      // Stochastic
       const { kLine, dLine } = calcStochastic(highs, lows, closes);
       const lastK = kLine[kLine.length - 1];
-      const lastD = dLine[dLine.length - 1];
-      const stochEl = document.getElementById('stoch-val');
-      stochEl.innerText = `${lastK.toFixed(1)} / ${lastD.toFixed(1)}`;
-      stochEl.className = `font-bold ${lastK > 80 ? 'text-red-400' : lastK < 20 ? 'text-emerald-400' : 'text-cyan-300'}`;
+      document.getElementById('stoch-val').innerText = `${lastK.toFixed(1)}`;
 
       renderChart('chart-stoch', 'line', labels, [
-        { label: '%K', data: kLine.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.8, pointRadius: 0 },
+        { label: '%K', data: kLine.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
         { label: '%D', data: dLine.slice(-displayCount), borderColor: '#f43f5e', borderWidth: 1.5, pointRadius: 0 }
       ], { min: 0, max: 100 });
 
-      // 4. RSI
-      const rsiArray = calcRSI(closes, 14);
-      const lastRsi = rsiArray[rsiArray.length - 1];
+      // RSI
+      const rsiArr = calcRSI(closes, 14);
+      const lastRsi = rsiArr[rsiArr.length - 1];
       const rsiEl = document.getElementById('rsi-val');
       rsiEl.innerText = lastRsi.toFixed(1);
       rsiEl.className = `font-bold ${lastRsi > 70 ? 'text-red-400' : lastRsi < 30 ? 'text-emerald-400' : 'text-cyan-300'}`;
 
       renderChart('chart-rsi', 'line', labels, [
-        {
-          label: 'RSI 14',
-          data: rsiArray.slice(-displayCount),
-          borderColor: '#a855f7',
-          backgroundColor: 'rgba(168, 85, 247, 0.1)',
-          fill: true,
-          borderWidth: 2,
-          pointRadius: 0
-        }
+        { label: 'RSI', data: rsiArr.slice(-displayCount), borderColor: '#a855f7', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(168,85,247,0.1)' }
       ], { min: 0, max: 100 });
 
-      // تحديث القرار الذكي
-      updateVerdict(lastPrice, lastEma20, lastEma50, lastRsi, lastHist);
+      // النظرة وقرار الدخول
+      updateVerdict(lastPrice, lastE20, lastE50, lastRsi, lastHist);
     }
 
-    function renderChart(canvasId, defaultType, labels, datasets, yLimits = {}) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (charts[canvasId]) {
-        charts[canvasId].destroy();
-      }
-      charts[canvasId] = new Chart(ctx, {
-        type: defaultType,
+    function renderChart(id, type, labels, datasets, yLimits = {}) {
+      const ctx = document.getElementById(id).getContext('2d');
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, {
+        type: type,
         data: { labels, datasets },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: {
-              display: true,
-              labels: { color: '#94a3b8', font: { family: 'Tajawal', size: 10 }, boxWidth: 10 }
-            },
-            tooltip: {
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              titleFont: { family: 'Tajawal', size: 11 },
-              bodyFont: { family: 'Tajawal', size: 11 }
-            }
-          },
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 9, family: 'Tajawal' }, boxWidth: 8 } } },
           scales: {
-            x: {
-              ticks: { color: '#64748b', maxTicksLimit: 6, font: { size: 9 } },
-              grid: { display: false }
-            },
-            y: {
-              min: yLimits.min,
-              max: yLimits.max,
-              position: 'right',
-              ticks: { color: '#64748b', maxTicksLimit: 5, font: { size: 9 } },
-              grid: { color: 'rgba(51, 65, 85, 0.3)' }
-            }
+            x: { ticks: { color: '#64748b', maxTicksLimit: 5, font: { size: 8 } }, grid: { display: false } },
+            y: { min: yLimits.min, max: yLimits.max, position: 'right', ticks: { color: '#64748b', maxTicksLimit: 4, font: { size: 8 } }, grid: { color: 'rgba(51,65,85,0.3)' } }
           }
         }
       });
@@ -454,70 +450,50 @@
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/global');
         const json = await res.json();
-        const marketCap = json.data.total_market_cap.usd;
-        const usdtDominance = json.data.market_cap_percentage.usdt;
-        const capChange24h = json.data.market_cap_change_percentage_24h_usd;
+        const cap = json.data.total_market_cap.usd;
+        const usdt = json.data.market_cap_percentage.usdt;
+        const change = json.data.market_cap_change_percentage_24h_usd;
 
-        document.getElementById('total-val').innerText = `$${(marketCap / 1e12).toFixed(2)}T`;
-        const prevCap = marketCap / (1 + (capChange24h / 100));
-        document.getElementById('total-prev').innerText = `الأمس: $${(prevCap / 1e12).toFixed(2)}T`;
-        
-        const totalDiffEl = document.getElementById('total-diff');
-        totalDiffEl.innerText = `${capChange24h >= 0 ? '+' : ''}${capChange24h.toFixed(2)}%`;
-        totalDiffEl.className = `font-semibold ${capChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+        document.getElementById('total-val').innerText = `$${(cap / 1e12).toFixed(2)}T`;
+        const diffEl = document.getElementById('total-diff');
+        diffEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        diffEl.className = `font-semibold ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
 
-        document.getElementById('usdt-val').innerText = `${usdtDominance.toFixed(2)}%`;
-        document.getElementById('usdt-prev').innerText = `سيولة مستقرة`;
-        const usdtDiffEl = document.getElementById('usdt-diff');
-        // انعكاس التأثير: هبوط استحواذ USDT إيجابي للسوق
-        usdtDiffEl.innerText = capChange24h >= 0 ? "تدفق للعملات" : "تحوط للكاش";
-        usdtDiffEl.className = `font-semibold ${capChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
-      } catch (e) {
-        document.getElementById('total-val').innerText = "$2.45T";
-        document.getElementById('usdt-val').innerText = "5.21%";
-      }
+        document.getElementById('usdt-val').innerText = `${usdt.toFixed(2)}%`;
+      } catch(e) {}
     }
 
     async function fetchFearAndGreed() {
       try {
         const res = await fetch('https://api.alternative.me/fng/?limit=1');
         const json = await res.json();
-        const val = json.data[0].value;
-        const text = json.data[0].value_classification;
-        document.getElementById('fear-greed-val').innerText = `${val} / 100`;
-        document.getElementById('fear-greed-label').innerText = text;
-      } catch(e) {
-        document.getElementById('fear-greed-val').innerText = "65 / 100";
-        document.getElementById('fear-greed-label').innerText = "Greed";
-      }
+        document.getElementById('fear-greed-val').innerText = `${json.data[0].value} / 100`;
+        document.getElementById('fear-greed-label').innerText = json.data[0].value_classification;
+      } catch(e) {}
     }
 
-    function updateVerdict(price, ema20, ema50, rsi, hist) {
-      const verdictEl = document.getElementById('market-verdict');
-      if (price > ema20 && price > ema50 && hist > 0 && rsi < 68) {
-        verdictEl.innerHTML = "🟢 <span class='text-emerald-400 font-bold'>إيجابية واضحة وزخم صاعد:</span> السعر يتداول فوق متوسطات 20 و 50 مع هستوجرام ماكد أخضر. البيئة مناسبة للبحث عن صفقات شراء مع الالتزام بالوقف.";
+    function updateVerdict(price, e20, e50, rsi, hist) {
+      const vEl = document.getElementById('market-verdict');
+      if (price > e20 && price > e50 && hist > 0 && rsi < 68) {
+        vEl.innerHTML = "🟢 <span class='text-emerald-400 font-bold'>مسار صاعد إيجابي:</span> السعر فوق المتوسطات والزخم داعم للبحث عن صفقات شراء مع إدارة مخاطر صارمة.";
       } else if (rsi >= 70) {
-        verdictEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>تشبع شرائي مرتفع (RSI فوق 70):</span> السوق صاعد لكن احتمالية جني الأرباح قريبة. تجنب مطاردة الأسعار وانتظر إعادة الاختبار.";
-      } else if (price < ema20 && hist < 0) {
-        verdictEl.innerHTML = "🔴 <span class='text-red-400 font-bold'>ضغط بيعي وزخم سلبي:</span> السعر كسر المتوسطات السريعة والماكد سلبي. يُنصح بالانتظار وعدم فتح صفقات شراء حالياً.";
+        vEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>تشبع شرائي:</span> الحذر مطلوب لاحتمال حدوث تصحيح قريب قبل أي دخول جديد.";
+      } else if (price < e20 && hist < 0) {
+        vEl.innerHTML = "🔴 <span class='text-red-400 font-bold'>ضغط سلبي:</span> السعر تحت المتوسطات والزخم هابط. يفضل الانتظار وحماية رأس المال.";
       } else {
-        verdictEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>حركة عرضية / تذبذب:</span> المؤشرات غير متوافقة بالكامل على هذا الفريم. الأفضل تقليل حجم المخاطرة أو مراقبة فريم أكبر.";
+        vEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>تذبذب عرضي:</span> المؤشرات متقاطعة، الأفضل المراقبة حتى وضوح الاتجاه.";
       }
     }
 
-    function changeInterval(interval) {
-      currentInterval = interval;
-      ['1h', '4h', '1d'].forEach(iv => {
-        const btn = document.getElementById(`btn-${iv}`);
-        if(iv === interval) {
-          btn.className = "py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition";
-        } else {
-          btn.className = "py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition";
-        }
+    function changeInterval(iv) {
+      currentInterval = iv;
+      ['1h', '4h', '1d'].forEach(i => {
+        document.getElementById(`btn-${i}`).className = i === iv ? "py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition" : "py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition";
       });
       fetchMarketData();
     }
 
+    // التشغيل الأولي
     fetchMarketData();
     setInterval(fetchMarketData, 60000);
   </script>
