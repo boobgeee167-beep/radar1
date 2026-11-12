@@ -1,1 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>رادار السوق - غرفة العمليات</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .chevron { transition: transform 0.25s ease; }
+    .chevron.open { transform: rotate(180deg); }
+  </style>
+</head>
+<body class="p-3 max-w-md mx-auto pb-12">
 
+  <!-- الرأس -->
+  <header class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
+    <div>
+      <h1 class="text-base font-bold text-cyan-400">رادار السوق اللحظي</h1>
+      <p class="text-[11px] text-slate-400">الواجهة الأولى</p>
+    </div>
+    <div id="status-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+      متصل
+    </div>
+  </header>
+
+  <!-- أزرار التنقل -->
+  <nav class="grid grid-cols-2 gap-2 mb-4 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/60">
+    <a href="radar.html" class="py-2 text-xs font-bold rounded-lg bg-cyan-600 text-white text-center transition shadow">
+      📡 رادار السوق
+    </a>
+    <a href="chart.html" class="py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:text-white text-center transition">
+      📊 شارت TradingView
+    </a>
+  </nav>
+
+  <!-- محتوى الرادار -->
+  <div class="space-y-3">
+    <!-- السيولة -->
+    <section class="grid grid-cols-2 gap-3">
+      <div class="glass p-3 rounded-xl">
+        <span class="text-xs text-slate-400 block">إجمالي السيولة (TOTAL)</span>
+        <div id="total-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
+        <div class="flex justify-between items-center mt-1 text-[11px]">
+          <span id="total-prev" class="text-slate-400">الأمس: --</span>
+          <span id="total-diff" class="font-semibold text-emerald-400">--%</span>
+        </div>
+      </div>
+      <div class="glass p-3 rounded-xl">
+        <span class="text-xs text-slate-400 block">استحواذ التيثر (USDT.D)</span>
+        <div id="usdt-val" class="text-base font-bold text-slate-100 mt-1">جاري التحميل...</div>
+        <div class="flex justify-between items-center mt-1 text-[11px]">
+          <span id="usdt-prev" class="text-slate-400">سيولة مستقرة</span>
+          <span id="usdt-diff" class="font-semibold text-emerald-400">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- الخوف والطمع -->
+    <section class="glass p-3 rounded-xl flex items-center justify-between">
+      <div>
+        <span class="text-xs text-slate-400 block">مؤشر الخوف والطمع</span>
+        <div id="fear-greed-val" class="text-base font-bold text-amber-400 mt-0.5">--</div>
+      </div>
+      <div id="fear-greed-label" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300">جاري الجلب</div>
+    </section>
+
+    <!-- البيتكوين والمؤشرات -->
+    <section class="glass p-3.5 rounded-xl">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="font-bold text-sm text-cyan-300">ملك السوق (BTC / USDT)</h2>
+          <div id="btc-price" class="text-xl font-extrabold text-white mt-0.5">$----</div>
+        </div>
+        <div class="text-left">
+          <span id="btc-change" class="text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">--%</span>
+          <span id="btc-prev" class="text-[10px] text-slate-400 block mt-1">إغلاق سابق: $----</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-3 bg-slate-900/60 p-1 rounded-lg border border-slate-700/50">
+        <button onclick="changeInterval('1h')" id="btn-1h" class="py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition">فريم 1س</button>
+        <button onclick="changeInterval('4h')" id="btn-4h" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم 4س</button>
+        <button onclick="changeInterval('1d')" id="btn-1d" class="py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition">فريم يومي</button>
+      </div>
+
+      <!-- المؤشرات الفنية -->
+      <div class="space-y-2 text-xs">
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('ema')" class="w-full flex justify-between items-center p-2.5 text-right">
+            <span class="text-slate-200">المتوسطات (EMA 20/50/200)</span>
+            <span id="ema-status" class="font-bold text-slate-400">جاري الحساب...</span>
+          </button>
+          <div id="drawer-ema" class="hidden p-3 pt-1 border-t border-slate-800 bg-slate-950/50">
+            <div class="flex justify-between text-[11px] text-slate-400 mb-2">
+              <span id="ema20-text">EMA20: --</span>
+              <span id="ema50-text">EMA50: --</span>
+              <span id="ema200-text">EMA200: --</span>
+            </div>
+            <div class="h-40 w-full"><canvas id="chart-ema"></canvas></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('macd')" class="w-full flex justify-between items-center p-2.5 text-right">
+            <span class="text-slate-200">مؤشر MACD والهستوجرام</span>
+            <span id="macd-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-macd" class="hidden p-3 pt-1 border-t border-slate-800 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-macd"></canvas></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('stoch')" class="w-full flex justify-between items-center p-2.5 text-right">
+            <span class="text-slate-200">مؤشر الاستوكاستيك</span>
+            <span id="stoch-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-stoch" class="hidden p-3 pt-1 border-t border-slate-800 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-stoch"></canvas></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/50 rounded-lg border border-slate-800 overflow-hidden">
+          <button onclick="toggleChart('rsi')" class="w-full flex justify-between items-center p-2.5 text-right">
+            <span class="text-slate-200">مؤشر القوة النسبية (RSI 14)</span>
+            <span id="rsi-val" class="font-bold text-slate-400">--</span>
+          </button>
+          <div id="drawer-rsi" class="hidden p-3 pt-1 border-t border-slate-800 bg-slate-950/50">
+            <div class="h-40 w-full"><canvas id="chart-rsi"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- القرار -->
+    <section class="glass p-3.5 rounded-xl border border-cyan-500/30">
+      <h3 class="text-xs font-bold text-cyan-400 mb-1.5">النظرة الفنية وقرار الدخول</h3>
+      <div id="market-verdict" class="text-xs font-medium text-slate-200">جاري تحليل المعطيات...</div>
+    </section>
+  </div>
+
+  <script>
+    let currentInterval = '1h';
+    let charts = {};
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    function toggleChart(name) {
+      document.getElementById(`drawer-${name}`).classList.toggle('hidden');
+    }
+
+    async function fetchMarketData() {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${currentInterval}&limit=250`);
+        const data = await res.json();
+        const times = data.map(c => {
+          const d = new Date(c[0]);
+          return currentInterval === '1d' ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getHours().toString().padStart(2, '0')}:00`;
+        });
+        const highs = data.map(c => parseFloat(c[2]));
+        const lows = data.map(c => parseFloat(c[3]));
+        const closes = data.map(c => parseFloat(c[4]));
+        const currentPrice = closes[closes.length - 1];
+        const prevClose = closes[closes.length - 2];
+        const priceChange = ((currentPrice - prevClose) / prevClose) * 100;
+
+        document.getElementById('btc-price').innerText = `$${currentPrice.toLocaleString()}`;
+        document.getElementById('btc-prev').innerText = `إغلاق سابق: $${prevClose.toLocaleString()}`;
+        const changeEl = document.getElementById('btc-change');
+        changeEl.innerText = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
+        changeEl.className = `text-xs font-bold px-2 py-1 rounded ${priceChange >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`;
+
+        calculateAndRenderIndicators(times, closes, highs, lows);
+        fetchGlobalMetrics();
+        fetchFearAndGreed();
+      } catch (err) { console.error(err); }
+    }
+
+    function calcEMA(data, period) {
+      const k = 2 / (period + 1);
+      let ema = [data[0]];
+      for (let i = 1; i < data.length; i++) ema.push(data[i] * k + ema[i - 1] * (1 - k));
+      return ema;
+    }
+
+    function calcMACD(closes) {
+      const ema12 = calcEMA(closes, 12), ema26 = calcEMA(closes, 26);
+      const macdLine = closes.map((_, i) => ema12[i] - ema26[i]);
+      const signalLine = calcEMA(macdLine, 9);
+      return { macdLine, signalLine, histogram: macdLine.map((v, i) => v - signalLine[i]) };
+    }
+
+    function calcRSI(closes, period = 14) {
+      let rsi = new Array(closes.length).fill(50), gains = 0, losses = 0;
+      for (let i = 1; i <= period; i++) { let d = closes[i] - closes[i-1]; if(d>=0) gains+=d; else losses-=d; }
+      let ag = gains/period, al = losses/period;
+      rsi[period] = al === 0 ? 100 : 100 - (100 / (1 + ag/al));
+      for (let i = period + 1; i < closes.length; i++) {
+        let d = closes[i] - closes[i-1];
+        ag = (ag * (period - 1) + (d >= 0 ? d : 0)) / period;
+        al = (al * (period - 1) + (d < 0 ? -d : 0)) / period;
+        rsi[i] = al === 0 ? 100 : 100 - (100 / (1 + ag/al));
+      }
+      return rsi;
+    }
+
+    function calcStochastic(highs, lows, closes, kP = 14, dP = 3) {
+      let kLine = [];
+      for (let i = 0; i < closes.length; i++) {
+        if (i < kP - 1) { kLine.push(50); continue; }
+        let h = Math.max(...highs.slice(i - kP + 1, i + 1)), l = Math.min(...lows.slice(i - kP + 1, i + 1));
+        kLine.push(h === l ? 50 : ((closes[i] - l) / (h - l)) * 100);
+      }
+      let dLine = kLine.map((_, i) => {
+        if (i < dP - 1) return kLine[i];
+        let s = 0; for (let j = 0; j < dP; j++) s += kLine[i - j];
+        return s / dP;
+      });
+      return { kLine, dLine };
+    }
+
+    function calculateAndRenderIndicators(times, closes, highs, lows) {
+      const displayCount = 40, labels = times.slice(-displayCount);
+      const ema20 = calcEMA(closes, 20), ema50 = calcEMA(closes, 50), ema200 = calcEMA(closes, 200);
+      const lastPrice = closes[closes.length - 1], lastE20 = ema20[ema20.length - 1], lastE50 = ema50[ema50.length - 1];
+
+      document.getElementById('ema20-text').innerText = `EMA20: $${Math.round(lastE20).toLocaleString()}`;
+      document.getElementById('ema50-text').innerText = `EMA50: $${Math.round(lastE50).toLocaleString()}`;
+      document.getElementById('ema200-text').innerText = `EMA200: $${Math.round(ema200[ema200.length - 1]).toLocaleString()}`;
+
+      renderChart('chart-ema', 'line', labels, [
+        { label: 'السعر', data: closes.slice(-displayCount), borderColor: '#f8fafc', borderWidth: 2, pointRadius: 0 },
+        { label: 'EMA20', data: ema20.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
+        { label: 'EMA50', data: ema50.slice(-displayCount), borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0 }
+      ]);
+
+      const { macdLine, signalLine, histogram } = calcMACD(closes);
+      const lastHist = histogram[histogram.length - 1];
+      document.getElementById('macd-val').innerText = lastHist >= 0 ? 'زخم شرائي' : 'زخم بيعي';
+
+      renderChart('chart-macd', 'line', labels, [
+        { label: 'MACD', data: macdLine.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
+        { label: 'Signal', data: signalLine.slice(-displayCount), borderColor: '#f97316', borderWidth: 1.5, pointRadius: 0 }
+      ]);
+
+      const { kLine, dLine } = calcStochastic(highs, lows, closes);
+      document.getElementById('stoch-val').innerText = `${kLine[kLine.length - 1].toFixed(1)}`;
+      renderChart('chart-stoch', 'line', labels, [
+        { label: '%K', data: kLine.slice(-displayCount), borderColor: '#38bdf8', borderWidth: 1.5, pointRadius: 0 },
+        { label: '%D', data: dLine.slice(-displayCount), borderColor: '#f43f5e', borderWidth: 1.5, pointRadius: 0 }
+      ], { min: 0, max: 100 });
+
+      const rsiArr = calcRSI(closes, 14), lastRsi = rsiArr[rsiArr.length - 1];
+      document.getElementById('rsi-val').innerText = lastRsi.toFixed(1);
+      renderChart('chart-rsi', 'line', labels, [
+        { label: 'RSI', data: rsiArr.slice(-displayCount), borderColor: '#a855f7', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(168,85,247,0.1)' }
+      ], { min: 0, max: 100 });
+
+      const vEl = document.getElementById('market-verdict');
+      if (lastPrice > lastE20 && lastPrice > lastE50 && lastHist > 0 && lastRsi < 68) {
+        vEl.innerHTML = "🟢 <span class='text-emerald-400 font-bold'>مسار صاعد إيجابي:</span> السعر فوق المتوسطات والزخم داعم للشراء.";
+      } else if (lastRsi >= 70) {
+        vEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>تشبع شرائي:</span> الحذر مطلوب لاحتمال تصحيح قريب.";
+      } else {
+        vEl.innerHTML = "🔴 <span class='text-red-400 font-bold'>ضغط سلبي أو تذبذب:</span> يفضل الانتظار وحماية رأس المال.";
+      }
+    }
+
+    function renderChart(id, type, labels, datasets, yLimits = {}) {
+      const ctx = document.getElementById(id).getContext('2d');
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, {
+        type: type, data: { labels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 9, family: 'Tajawal' }, boxWidth: 8 } } },
+          scales: {
+            x: { ticks: { color: '#64748b', maxTicksLimit: 5, font: { size: 8 } }, grid: { display: false } },
+            y: { min: yLimits.min, max: yLimits.max, position: 'right', ticks: { color: '#64748b', maxTicksLimit: 4, font: { size: 8 } }, grid: { color: 'rgba(51,65,85,0.3)' } }
+          }
+        }
+      });
+    }
+
+    async function fetchGlobalMetrics() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/global');
+        const json = await res.json();
+        document.getElementById('total-val').innerText = `$${(json.data.total_market_cap.usd / 1e12).toFixed(2)}T`;
+        document.getElementById('usdt-val').innerText = `${json.data.market_cap_percentage.usdt.toFixed(2)}%`;
+      } catch(e) {}
+    }
+
+    async function fetchFearAndGreed() {
+      try {
+        const res = await fetch('https://api.alternative.me/fng/?limit=1');
+        const json = await res.json();
+        document.getElementById('fear-greed-val').innerText = `${json.data[0].value} / 100`;
+        document.getElementById('fear-greed-label').innerText = json.data[0].value_classification;
+      } catch(e) {}
+    }
+
+    function changeInterval(iv) {
+      currentInterval = iv;
+      ['1h', '4h', '1d'].forEach(i => {
+        document.getElementById(`btn-${i}`).className = i === iv ? "py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition" : "py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition";
+      });
+      fetchMarketData();
+    }
+
+    fetchMarketData();
+    setInterval(fetchMarketData, 60000);
+  </script>
+</body>
+            </html>
+            
