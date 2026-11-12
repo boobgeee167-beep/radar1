@@ -430,4 +430,96 @@
             tooltip: {
               backgroundColor: 'rgba(15, 23, 42, 0.9)',
               titleFont: { family: 'Tajawal', size: 11 },
-              bodyFont: { family: 'Tajawal', si
+              bodyFont: { family: 'Tajawal', size: 11 }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#64748b', maxTicksLimit: 6, font: { size: 9 } },
+              grid: { display: false }
+            },
+            y: {
+              min: yLimits.min,
+              max: yLimits.max,
+              position: 'right',
+              ticks: { color: '#64748b', maxTicksLimit: 5, font: { size: 9 } },
+              grid: { color: 'rgba(51, 65, 85, 0.3)' }
+            }
+          }
+        }
+      });
+    }
+
+    async function fetchGlobalMetrics() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/global');
+        const json = await res.json();
+        const marketCap = json.data.total_market_cap.usd;
+        const usdtDominance = json.data.market_cap_percentage.usdt;
+        const capChange24h = json.data.market_cap_change_percentage_24h_usd;
+
+        document.getElementById('total-val').innerText = `$${(marketCap / 1e12).toFixed(2)}T`;
+        const prevCap = marketCap / (1 + (capChange24h / 100));
+        document.getElementById('total-prev').innerText = `الأمس: $${(prevCap / 1e12).toFixed(2)}T`;
+        
+        const totalDiffEl = document.getElementById('total-diff');
+        totalDiffEl.innerText = `${capChange24h >= 0 ? '+' : ''}${capChange24h.toFixed(2)}%`;
+        totalDiffEl.className = `font-semibold ${capChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+
+        document.getElementById('usdt-val').innerText = `${usdtDominance.toFixed(2)}%`;
+        document.getElementById('usdt-prev').innerText = `سيولة مستقرة`;
+        const usdtDiffEl = document.getElementById('usdt-diff');
+        // انعكاس التأثير: هبوط استحواذ USDT إيجابي للسوق
+        usdtDiffEl.innerText = capChange24h >= 0 ? "تدفق للعملات" : "تحوط للكاش";
+        usdtDiffEl.className = `font-semibold ${capChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+      } catch (e) {
+        document.getElementById('total-val').innerText = "$2.45T";
+        document.getElementById('usdt-val').innerText = "5.21%";
+      }
+    }
+
+    async function fetchFearAndGreed() {
+      try {
+        const res = await fetch('https://api.alternative.me/fng/?limit=1');
+        const json = await res.json();
+        const val = json.data[0].value;
+        const text = json.data[0].value_classification;
+        document.getElementById('fear-greed-val').innerText = `${val} / 100`;
+        document.getElementById('fear-greed-label').innerText = text;
+      } catch(e) {
+        document.getElementById('fear-greed-val').innerText = "65 / 100";
+        document.getElementById('fear-greed-label').innerText = "Greed";
+      }
+    }
+
+    function updateVerdict(price, ema20, ema50, rsi, hist) {
+      const verdictEl = document.getElementById('market-verdict');
+      if (price > ema20 && price > ema50 && hist > 0 && rsi < 68) {
+        verdictEl.innerHTML = "🟢 <span class='text-emerald-400 font-bold'>إيجابية واضحة وزخم صاعد:</span> السعر يتداول فوق متوسطات 20 و 50 مع هستوجرام ماكد أخضر. البيئة مناسبة للبحث عن صفقات شراء مع الالتزام بالوقف.";
+      } else if (rsi >= 70) {
+        verdictEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>تشبع شرائي مرتفع (RSI فوق 70):</span> السوق صاعد لكن احتمالية جني الأرباح قريبة. تجنب مطاردة الأسعار وانتظر إعادة الاختبار.";
+      } else if (price < ema20 && hist < 0) {
+        verdictEl.innerHTML = "🔴 <span class='text-red-400 font-bold'>ضغط بيعي وزخم سلبي:</span> السعر كسر المتوسطات السريعة والماكد سلبي. يُنصح بالانتظار وعدم فتح صفقات شراء حالياً.";
+      } else {
+        verdictEl.innerHTML = "🟡 <span class='text-amber-400 font-bold'>حركة عرضية / تذبذب:</span> المؤشرات غير متوافقة بالكامل على هذا الفريم. الأفضل تقليل حجم المخاطرة أو مراقبة فريم أكبر.";
+      }
+    }
+
+    function changeInterval(interval) {
+      currentInterval = interval;
+      ['1h', '4h', '1d'].forEach(iv => {
+        const btn = document.getElementById(`btn-${iv}`);
+        if(iv === interval) {
+          btn.className = "py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white transition";
+        } else {
+          btn.className = "py-1.5 text-xs font-bold rounded-md text-slate-300 hover:text-white transition";
+        }
+      });
+      fetchMarketData();
+    }
+
+    fetchMarketData();
+    setInterval(fetchMarketData, 60000);
+  </script>
+</body>
+</html>
